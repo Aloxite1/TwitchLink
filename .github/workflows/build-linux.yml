@@ -12,8 +12,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build
+  build_deb:
+    name: Build .deb
 
     runs-on: ubuntu-22.04
 
@@ -26,7 +26,6 @@ jobs:
       APP_NAME: twitchlink
       DIRECTORY_NAME: twitchlink_${{ inputs.version }}-1_amd64
       OUTPUT_DEB: twitchlink_${{ inputs.version }}-1_amd64.deb
-      OUTPUT_FLATPAK: twitchlink-${{ inputs.version }}-x86_64.flatpak
       FFMPEG_SOURCE: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-31-13-27/ffmpeg-N-126342-gf88b741dbf-linux64-gpl.tar.xz'
 
     steps:
@@ -39,6 +38,7 @@ jobs:
           !/resources/dependencies/windows
           !/.github/build/macos
           !/resources/dependencies/macos
+          !/.github/build/linux/io.github.devhotteok.TwitchLink.yml
         sparse-checkout-cone-mode: false
         
     - name: Download FFmpeg
@@ -63,12 +63,11 @@ jobs:
     - name: Prepare build files
       run: cp -r .github/build/linux/* .
 
-    - name: Update build files with version
+    - name: Update control file with version
       run: |
         sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' DEBIAN/control
         sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' DEBIAN/control
-        sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' io.github.devhotteok.TwitchLink.yml
-        echo "✅ Updated files with version: ${{ inputs.version }}"
+        echo "✅ Updated debian control with version: ${{ inputs.version }}"
 
     - name: Build executible
       run: |
@@ -92,29 +91,68 @@ jobs:
         fi
         echo "✅ Built: ${{ env.OUTPUT_DEB }}"
 
-    - name: Install flatpak utilities
-      run: sudo apt install flatpak flatpak-builder
+    - name: Upload .deb artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: output_deb
+        path: ${{ env.OUTPUT_DEB }}
+    
+        
+  build_flatpak:
+    name: Build flatpak
 
-    - name: Prepare .deb for flatpak building
+    runs-on: ubuntu-22.04
+    needs: build_deb
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+
+    env:
+      OUTPUT_FLATPAK: twitchlink-${{ inputs.version }}-x86_64.flatpak
+
+    steps:
+    - name: Checkout flatpak manifest
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          /.github/build/linux/io.github.devhotteok.TwitchLink.yml
+        sparse-checkout-cone-mode: false
+
+    - name: Download .deb artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: output_deb
+
+    - name: Prepare flatpak manifest
+      run: cp -r .github/build/linux/io.github.devhotteok.TwitchLink.yml .
+    
+    - name: Update flatpak manifest with version
       run: |
-        mkdir flatpak
-        cp ${{ env.OUTPUT_DEB }} flatpak
+        sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' io.github.devhotteok.TwitchLink.yml
+        echo "✅ Updated manifest with version: ${{ inputs.version }}"
 
-    - name: Build flatpak
-      run: |
-        flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo --install builddir io.github.devhotteok.TwitchLink.yml
-        flatpak build-bundle repo ${{ env.OUTPUT_FLATPAK }} io.github.devhotteok.TwitchLink
+    - name: Build flatpak bundle as artifact
+      uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      with:
+        bundle: ${{ env.OUTPUT_FLATPAK }}
+        manifest-path: io.github.devhotteok.TwitchLink.yml
+        artifact-name: output_flatpak
 
-        if [ $? -ne 0 ]; then
-          echo "❌ Failed to build flatpak"
-          exit 1
-        fi
-        echo "✅ Built: ${{ env.OUTPUT_FLATPAK }}"
+
+  upload:
+    name: Upload packages
+
+    runs-on: ubuntu-latest
+    needs: [build_deb, build_flatpak]
+
+    steps:
+    - name: Download package artifacts
+      uses: actions/download-artifact@v4
 
     - name: Upload to release
       uses: softprops/action-gh-release@v2
       with:
         fail_on_unmatched_files: true
         files: |
-          ${{ env.OUTPUT_DEB }}
-          ${{ env.OUTPUT_FLATPAK }}
+          output_deb
+          output_flatpak
