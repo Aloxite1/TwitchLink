@@ -66,7 +66,6 @@ jobs:
     - name: Update control file with version
       run: |
         sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' DEBIAN/control
-        sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' DEBIAN/control
         echo "✅ Updated debian control with version: ${{ inputs.version }}"
 
     - name: Build executible

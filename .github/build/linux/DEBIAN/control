@@ -1,4 +1,4 @@
-Package: TwitchLink
+Package: twitchlink
 Version: {{APP_VERSION}}-1
 Architecture: amd64
 Section: python
