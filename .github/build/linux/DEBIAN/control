@@ -3,7 +3,7 @@ Version: {{APP_VERSION}}-1
 Architecture: amd64
 Section: python
 Priority: optional
-Depends: libc6 (>= 2.35), libgl1, zlib1g
+Depends: libc6 (>= {{LIBC_VERSION}}), libgl1, zlib1g
 Maintainer: devhotteok <devhotteok@gmail.com>
 Homepage: https://twitchlink.github.io/
 Description: Twitch Stream / Video / Clip Downloader

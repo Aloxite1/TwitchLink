@@ -29,6 +29,9 @@ jobs:
       FFMPEG_SOURCE: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-31-13-27/ffmpeg-N-126342-gf88b741dbf-linux64-gpl.tar.xz'
 
     steps:
+    - name: Identify libc version
+      run: echo "LIBC_VERSION=$(getconf GNU_LIBC_VERSION | grep -A 0 "glibc" | cut -d' ' -f2)" >> $GITHUB_ENV
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -63,10 +66,11 @@ jobs:
     - name: Prepare build files
       run: cp -r .github/build/linux/* .
 
-    - name: Update control file with version
+    - name: Update control file with versions
       run: |
         sed -i 's/{{APP_VERSION}}/${{ inputs.version }}/g' DEBIAN/control
-        echo "✅ Updated debian control with version: ${{ inputs.version }}"
+        sed -i 's/{{LIBC_VERSION}}/$LIBC_VERSION/g' DEBIAN/control
+        echo "✅ Updated debian control with app version: ${{ inputs.version }} and libc version: $LIBC_VERSION"
 
     - name: Build executible
       run: |
