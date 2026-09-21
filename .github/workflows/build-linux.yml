@@ -157,5 +157,5 @@ jobs:
       with:
         fail_on_unmatched_files: true
         files: |
-          output_deb
-          output_flatpak
+          output_deb/*.deb
+          output_flatpak/*.flatpak
