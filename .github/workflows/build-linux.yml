@@ -86,7 +86,7 @@ jobs:
         mv dist/${{ env.APP_NAME }} usr/share
         mkdir ${{ env.DIRECTORY_NAME }}
         mv DEBIAN usr ${{ env.DIRECTORY_NAME }}
-        dpkg-deb --build ${{ env.DIRECTORY_NAME }}
+        dpkg-deb --root-owner-group --build ${{ env.DIRECTORY_NAME }}
 
         if [ $? -ne 0 ]; then
           echo "❌ Failed to package .deb"
