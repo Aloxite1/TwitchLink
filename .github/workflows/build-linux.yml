@@ -49,7 +49,7 @@ jobs:
         curl -L -o ffmpeg_download.tar.xz ${{ env.FFMPEG_SOURCE }}
         mkdir ffmpeg_download
         tar -xf ffmpeg_download.tar.xz --strip-components 1 -C ffmpeg_download
-        mv ffmpeg_download/bin/ffmpeg resources/dependencies/linux
+        install -Dm755 ffmpeg_download/bin/ffmpeg resources/dependencies/linux/ffmpeg
         rm -r ffmpeg_download.tar.xz ffmpeg_download
 
     - name: Set up Python
