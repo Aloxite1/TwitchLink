@@ -26,7 +26,7 @@ jobs:
       APP_NAME: twitchlink
       DIRECTORY_NAME: twitchlink_${{ inputs.version }}-1_amd64
       OUTPUT_DEB: twitchlink_${{ inputs.version }}-1_amd64.deb
-      FFMPEG_SOURCE: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-31-13-27/ffmpeg-N-126342-gf88b741dbf-linux64-gpl.tar.xz'
+      FFMPEG_SOURCE: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-30-13-08/ffmpeg-N-127021-ge0c94b2d1c-linux64-gpl.tar.xz'
 
     steps:
     - name: Identify libc version
